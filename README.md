@@ -15,6 +15,12 @@ Install the dependencies once:
 yarn install
 ```
 
+Build the TypeScript sources whenever you change the code or before running the CLI:
+
+```bash
+yarn build
+```
+
 ## Environment configuration
 
 The project loads credentials and runtime configuration from a `.env` file. Start from the provided template and fill in your values:
@@ -54,16 +60,69 @@ All Drive interactions use the official [`googleapis`](https://www.npmjs.com/pac
 
 > ⚠️  Never commit the `.env` file or raw credential JSON to your repository. The `.gitignore` file already excludes common secrets, but always verify before pushing.
 
-## Workflow
+## CLI usage
 
-1. Clone this repository.
+After building the project you can invoke the CLI directly from the compiled output or through the convenience script:
+
+```bash
+# list available commands
+yarn ctogdm --help
+
+# list all pages detected in the Confluence export index
+yarn ctogdm list
+
+# download every page as a .doc file using the Confluence export API
+yarn ctogdm download
+
+# render the downloaded documents into the structured output directory
+yarn ctogdm render
+
+# perform download, render, and attachment sync in a single step
+yarn ctogdm sync
+```
+
+The CLI reads the environment variables documented above at runtime. The default directories are:
+
+- `ATLASSIAN_EXPORT_PATH` — folder containing the HTML export bundle (defaults to `confluence-export`).
+- `ATLASSIAN_DOWNLOAD_PATH` — target directory for downloaded `.doc` files (defaults to `downloaded-pages`).
+- `ATLASSIAN_OUTPUT_PATH` — final structured output directory (defaults to `output`).
+
+## Programmatic usage
+
+The core migration workflow is exposed through the `ExportPipeline` class. The factory `createExportPipeline` configures all
+dependencies from the environment, so you can integrate the pipeline into your own scripts:
+
+```ts
+import {createExportPipeline} from './dist/pipeline/export-pipeline';
+
+async function main(): Promise<void> {
+  const pipeline = createExportPipeline();
+
+  const pages = await pipeline.listPages();
+  console.log(`Found ${pages.length} top-level pages`);
+
+  await pipeline.downloadPages(pages);
+  await pipeline.renderPages(pages);
+  await pipeline.syncAttachments();
+}
+
+main().catch(error => {
+  console.error(error);
+  process.exit(1);
+});
+```
+
+If you prefer to provide custom implementations or override paths programmatically, instantiate `ExportPipeline` directly with
+your own clients, exporters, and `FileWriter`.
+
+## Migration workflow overview
+
+1. Clone this repository and install dependencies.
 2. Configure your `.env` file as described above.
 3. Export your Confluence space to Word and copy the bundle to the folder specified by `ATLASSIAN_EXPORT_PATH`.
-4. Use `getConfluencePages` to generate the descriptors and hierarchy of your files from `index.html`.
-5. Run `downloadPages` to fetch the `.doc` representations for each Confluence page.
-6. Convert the `.doc` files to `.docx` (for example, using [this batch conversion method](https://www.extendoffice.com/documents/word/5601-word-batch-convert-doc-to-docx.html)).
-7. Call `writeConfluencePages` to arrange the converted files in the correct folder structure under `output/`.
-8. Upload those files to Google Drive using the SDK authenticated via your service account credentials.
+4. Run the CLI commands (or call the pipeline programmatically) to list, download, and render the pages.
+5. Convert the rendered documents to `.docx` if desired (for example, using [this batch conversion method](https://www.extendoffice.com/documents/word/5601-word-batch-convert-doc-to-docx.html)).
+6. Upload the final files to Google Drive using the SDK authenticated via your service account credentials.
 
 ## Limitations
 
