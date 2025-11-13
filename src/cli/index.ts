@@ -59,12 +59,11 @@ export function buildCli(): Command {
         );
 
     program
-        .command('sync')
-        .description('Download, render, and copy attachments in a single step')
+        .command('attachments')
+        .alias('sync')
+        .description('Copy attachments from the Confluence export into the output directory')
         .action(() =>
             runWithPipeline(async pipeline => {
-                await pipeline.downloadPages();
-                await pipeline.renderPages();
                 await pipeline.syncAttachments();
             }),
         );

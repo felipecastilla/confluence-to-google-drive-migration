@@ -62,4 +62,29 @@ describe('ExportPipeline', () => {
         const attachmentPath = path.join(outputDir, 'attachments', 'file.txt');
         expect(await fs.readFile(attachmentPath, 'utf8')).toEqual('attachment');
     });
+
+    it('syncs attachments without requiring prior download or render steps', async () => {
+        const downloadDir = await createTempDir('pipeline-downloads-');
+        const outputDir = await createTempDir('pipeline-output-');
+        const attachmentsSourceDir = path.join(await createTempDir('pipeline-attachments-'), 'attachments');
+        await fs.mkdir(attachmentsSourceDir, {recursive: true});
+        await fs.writeFile(path.join(attachmentsSourceDir, 'file.txt'), 'attachment');
+
+        const client = new StubClient([], Buffer.from('doc'), attachmentsSourceDir);
+        const exporter = new StubExporter();
+        const fileWriter = new FileWriter();
+        const pipeline = new ExportPipeline(client, exporter, fileWriter, {
+            downloadDir,
+            outputDir,
+            attachmentsSourceDir,
+            attachmentsOutputDir: path.join(outputDir, 'attachments'),
+            documentExtension: 'doc',
+        });
+
+        await pipeline.syncAttachments();
+
+        const attachmentPath = path.join(outputDir, 'attachments', 'file.txt');
+        expect(await fs.readFile(attachmentPath, 'utf8')).toEqual('attachment');
+        expect(exporter.renderPages).not.toHaveBeenCalled();
+    });
 });
