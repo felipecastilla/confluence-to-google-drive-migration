@@ -4,3 +4,8 @@ downloaded-pages
 .idea
 node_modules
 *.js
+.env
+.env.local
+credentials/
+.yarn/
+.yarnrc.yml

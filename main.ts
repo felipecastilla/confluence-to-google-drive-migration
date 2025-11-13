@@ -1,5 +1,7 @@
 import {MakeDirectoryOptions, Mode, PathLike, PathOrFileDescriptor, WriteFileOptions} from "fs";
 import axios from 'axios';
+import * as path from 'path';
+import {ATLASSIAN_API_TOKEN, ATLASSIAN_BASE_URL, ATLASSIAN_EMAIL, ATLASSIAN_EXPORT_PATH} from './config/env';
 const fs = require('fs');
 const ncp = require('ncp');
 const http = require('http');
@@ -50,7 +52,8 @@ async function mkdir(path: PathLike, options: Mode | MakeDirectoryOptions | null
 }
 
 async function getConfluencePages(): Promise<IConfluencePage[]> {
-    const file: string = await readFile('confluence-export/index.html');
+    const indexPath = path.join(ATLASSIAN_EXPORT_PATH, 'index.html');
+    const file: string = await readFile(indexPath);
     const parsedHtml: HTMLElement = parse(file);
     const rootUlElement = parsedHtml.querySelector('ul');
 
@@ -84,8 +87,8 @@ function removeElementByQuery(htmlElement: HTMLElement, query: string): void {
     removeElement(element);
 }
 
-function writeConfluencePages(confluencePages: IConfluencePage[], path: string = 'output', depth = 0): void {
-    console.log(path);
+function writeConfluencePages(confluencePages: IConfluencePage[], currentPath: string = 'output', depth = 0): void {
+    console.log(currentPath);
     for (let confluencePage of confluencePages) {
         if (!confluencePage.children) {
             try {
@@ -103,7 +106,7 @@ function writeConfluencePages(confluencePages: IConfluencePage[], path: string =
                 //     }
                 // }
 
-                const pathToFile: string[] = `${path}/${confluencePage.name}`.split('/');
+                const pathToFile: string[] = `${currentPath}/${confluencePage.name}`.split('/');
                 const fileName: string = pathToFile.pop();
                 const pathToFileContainingFolder = pathToFile.join('/');
                 if (!fs.existsSync(pathToFileContainingFolder)){
@@ -123,7 +126,7 @@ function writeConfluencePages(confluencePages: IConfluencePage[], path: string =
                     children: null,
                 },
                 ...confluencePage.children,
-            ], `${path}/${confluencePage.name}`, depth++)
+            ], `${currentPath}/${confluencePage.name}`, depth++)
         }
     }
 }
@@ -131,14 +134,15 @@ function writeConfluencePages(confluencePages: IConfluencePage[], path: string =
 async function downloadPage(confluencePage: IConfluencePage): Promise<void> {
     console.log('downloading page', confluencePage.name);
     try {
+        const pageUrl = new URL(`/wiki/exportword?pageId=${confluencePage.id}`, ATLASSIAN_BASE_URL).toString();
+        const authorizationHeader = `Basic ${Buffer.from(`${ATLASSIAN_EMAIL}:${ATLASSIAN_API_TOKEN}`).toString('base64')}`;
         const data = (await axios.get(
-            `https://harshuv.atlassian.net/wiki/exportword?pageId=${confluencePage.id}`,
+            pageUrl,
             {
                 headers: {
-                    authority: 'harshuv.atlassian.net',
-                    cookie: 'confluence.browse.space.cookie=space-templates; atl.xsrf.token=71775be629427083813f053779f9f9a99b433e6e; confluence.last-web-item-clicked=system.space.tools/contenttools/export; JSESSIONID=2D750B5A7C3CA17C1C183DF95A1F0414; ajs_group_id=null; ajs_anonymous_id="863699d8-270e-4c99-86cf-908cf6a8b6b7"; atlassian.xsrf.token=f0efcbe1-3ed9-41b3-a772-2411bb486442_d242e229f52da0c05b74bb0c83608069219dc4fc_lin; cloud.session.token=eyJraWQiOiJzZXNzaW9uLXNlcnZpY2VcL3Byb2QtMTU5Mjg1ODM5NCIsImFsZyI6IlJTMjU2In0.eyJhc3NvY2lhdGlvbnMiOltdLCJzdWIiOiI1ZGFjZDRkZmJiNTlkODBkODhlYWNmNmYiLCJlbWFpbERvbWFpbiI6ImdtYWlsLmNvbSIsImltcGVyc29uYXRpb24iOltdLCJjcmVhdGVkIjoxNjMwMzUyNjUwLCJyZWZyZXNoVGltZW91dCI6MTYzMTc5NjEyOSwidmVyaWZpZWQiOnRydWUsImlzcyI6InNlc3Npb24tc2VydmljZSIsInNlc3Npb25JZCI6ImI5ZjRkMzgzLTFmZGYtNDZhMi05NjM5LWRkYzBlMTYwZDMwNCIsImF1ZCI6ImF0bGFzc2lhbiIsIm5iZiI6MTYzMTc5NTUyOSwiZXhwIjoxNjM0Mzg3NTI5LCJpYXQiOjE2MzE3OTU1MjksImVtYWlsIjoic2hhY2hhci5oYXJzaHV2QGdtYWlsLmNvbSIsImp0aSI6ImI5ZjRkMzgzLTFmZGYtNDZhMi05NjM5LWRkYzBlMTYwZDMwNCJ9.w_kDm5DQim7WCrTt0_yOoHpf8JQd2ve_GHAPiE9McWGAAS7K-UeVg14vn_WN4f9liP_KB61fti161ZJzboHQ7jBYT6xvTIO--OJPpanac2IsBVheKx8L49yTPf3rSeW7rjpofGMzDJiME7TYPqXMJ9rYSBzNL7XZs1dNLs1Cmhf80pqT-TBZxjV5ipEaQWm9C8RuGiu9B824a6tI72Z9aXQ77MwIWoREYtI-9rFjaA3OllxCjS4eYIq0Prlo1Wz208lYOZ2y4mpUXL4dwLkamaiLYZnOl9HmtgeyYkM2qhq0MKjdaZDy5zTOrBTgqYXvLlemjtVwnp5byluMIctGpg',
+                    Authorization: authorizationHeader,
                 },
-                // params: params.queryParams, // todo: make query params work
+                responseType: 'arraybuffer',
             },
         )).data
 
