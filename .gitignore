@@ -4,6 +4,7 @@ downloaded-pages
 dist
 coverage
 .idea
+.DS_Store
 node_modules
 *.js
 .env
