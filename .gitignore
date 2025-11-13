@@ -1,6 +1,8 @@
 output
 confluence-export
 downloaded-pages
+dist
+coverage
 .idea
 node_modules
 *.js
