@@ -1,2 +1,4 @@
 #!/usr/bin/env node
-import '../src/cli/index';
+import {buildCli} from '../src/cli';
+
+void buildCli().parseAsync(process.argv);
