@@ -77,9 +77,14 @@ yarn ctogdm download
 # render the downloaded documents into the structured output directory
 yarn ctogdm render
 
-# perform download, render, and attachment sync in a single step
+# copy attachments from the Confluence export bundle into the output directory
+yarn ctogdm attachments
+
+# legacy alias for the attachments command
 yarn ctogdm sync
 ```
+
+> ℹ️  The `attachments` command only copies files from the export bundle. If you need fresh page content, run `download` and `render` beforehand.
 
 The CLI reads the environment variables documented above at runtime. The default directories are:
 
