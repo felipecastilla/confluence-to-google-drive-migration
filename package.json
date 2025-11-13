@@ -4,6 +4,9 @@
   "bin": {
     "ctogdm": "dist/bin/ctogdm.js"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/bin/ctogdm.js",

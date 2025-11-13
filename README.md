@@ -6,7 +6,7 @@ Because Google Drive supports viewing and editing `.docx` files, we export the C
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 16 or later
+- [Node.js](https://nodejs.org/) 24 or later
 - [Yarn](https://yarnpkg.com/) (this project uses the Yarn 4 node-modules linker)
 
 Install the dependencies once:
