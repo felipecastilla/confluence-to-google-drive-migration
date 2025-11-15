@@ -29,6 +29,10 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@googleapis/docs", "npm:8.1.1"],\
+          ["@shelf/libreoffice-convert", [\
+            "libreoffice-convert",\
+            "npm:1.7.0"\
+          ]],\
           ["@types/jest", "npm:30.0.0"],\
           ["@types/node", "npm:24.10.1"],\
           ["axios", "npm:1.13.2"],\
@@ -40,6 +44,7 @@ const RAW_RUNTIME_STATE =
           ["jest", "virtual:3b1ff69da39f0826797c1ac373b773cd334ec16ea5b3ba85f1eaa0eef7d91770d29fb1114ec31217c738e70f6ce8bfed638be926da5cf3c01c0b9cfb16a9caad#npm:30.2.0"],\
           ["jest-util", "npm:30.2.0"],\
           ["node-html-parser", "npm:7.0.1"],\
+          ["p-limit", "npm:7.2.0"],\
           ["ts-jest", "virtual:3b1ff69da39f0826797c1ac373b773cd334ec16ea5b3ba85f1eaa0eef7d91770d29fb1114ec31217c738e70f6ce8bfed638be926da5cf3c01c0b9cfb16a9caad#npm:29.4.5"],\
           ["typescript", "patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"]\
         ],\
@@ -1826,6 +1831,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["async", [\
+      ["npm:3.2.6", {\
+        "packageLocation": "../../root/.yarn/berry/cache/async-npm-3.2.6-aa4f5aa081-10c0.zip/node_modules/async/",\
+        "packageDependencies": [\
+          ["async", "npm:3.2.6"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["async-function", [\
       ["npm:1.0.0", {\
         "packageLocation": "../../root/.yarn/berry/cache/async-function-npm-1.0.0-a81667ebcd-10c0.zip/node_modules/async-function/",\
@@ -2360,6 +2374,10 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "./",\
         "packageDependencies": [\
           ["@googleapis/docs", "npm:8.1.1"],\
+          ["@shelf/libreoffice-convert", [\
+            "libreoffice-convert",\
+            "npm:1.7.0"\
+          ]],\
           ["@types/jest", "npm:30.0.0"],\
           ["@types/node", "npm:24.10.1"],\
           ["axios", "npm:1.13.2"],\
@@ -2371,6 +2389,7 @@ const RAW_RUNTIME_STATE =
           ["jest", "virtual:3b1ff69da39f0826797c1ac373b773cd334ec16ea5b3ba85f1eaa0eef7d91770d29fb1114ec31217c738e70f6ce8bfed638be926da5cf3c01c0b9cfb16a9caad#npm:30.2.0"],\
           ["jest-util", "npm:30.2.0"],\
           ["node-html-parser", "npm:7.0.1"],\
+          ["p-limit", "npm:7.2.0"],\
           ["ts-jest", "virtual:3b1ff69da39f0826797c1ac373b773cd334ec16ea5b3ba85f1eaa0eef7d91770d29fb1114ec31217c738e70f6ce8bfed638be926da5cf3c01c0b9cfb16a9caad#npm:29.4.5"],\
           ["typescript", "patch:typescript@npm%3A5.9.3#optional!builtin<compat/typescript>::version=5.9.3&hash=5786d5"]\
         ],\
@@ -4132,6 +4151,17 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["libreoffice-convert", [\
+      ["npm:1.7.0", {\
+        "packageLocation": "../../root/.yarn/berry/cache/libreoffice-convert-npm-1.7.0-32720b0ea4-10c0.zip/node_modules/libreoffice-convert/",\
+        "packageDependencies": [\
+          ["async", "npm:3.2.6"],\
+          ["libreoffice-convert", "npm:1.7.0"],\
+          ["tmp", "npm:0.2.5"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["lines-and-columns", [\
       ["npm:1.2.4", {\
         "packageLocation": "../../root/.yarn/berry/cache/lines-and-columns-npm-1.2.4-d6c7cc5799-10c0.zip/node_modules/lines-and-columns/",\
@@ -4601,6 +4631,14 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["p-limit", "npm:3.1.0"],\
           ["yocto-queue", "npm:0.1.0"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:7.2.0", {\
+        "packageLocation": "../../root/.yarn/berry/cache/p-limit-npm-7.2.0-72063c9642-10c0.zip/node_modules/p-limit/",\
+        "packageDependencies": [\
+          ["p-limit", "npm:7.2.0"],\
+          ["yocto-queue", "npm:1.2.2"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -5223,6 +5261,15 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["tmp", [\
+      ["npm:0.2.5", {\
+        "packageLocation": "../../root/.yarn/berry/cache/tmp-npm-0.2.5-e146296d91-10c0.zip/node_modules/tmp/",\
+        "packageDependencies": [\
+          ["tmp", "npm:0.2.5"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["tmpl", [\
       ["npm:1.0.5", {\
         "packageLocation": "../../root/.yarn/berry/cache/tmpl-npm-1.0.5-d399ba37e2-10c0.zip/node_modules/tmpl/",\
@@ -5606,6 +5653,13 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../root/.yarn/berry/cache/yocto-queue-npm-0.1.0-c6c9a7db29-10c0.zip/node_modules/yocto-queue/",\
         "packageDependencies": [\
           ["yocto-queue", "npm:0.1.0"]\
+        ],\
+        "linkType": "HARD"\
+      }],\
+      ["npm:1.2.2", {\
+        "packageLocation": "../../root/.yarn/berry/cache/yocto-queue-npm-1.2.2-04a540db16-10c0.zip/node_modules/yocto-queue/",\
+        "packageDependencies": [\
+          ["yocto-queue", "npm:1.2.2"]\
         ],\
         "linkType": "HARD"\
       }]\

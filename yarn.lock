@@ -834,6 +834,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@shelf/libreoffice-convert@npm:libreoffice-convert@^1.7.0":
+  version: 1.7.0
+  resolution: "libreoffice-convert@npm:1.7.0"
+  dependencies:
+    async: "npm:^3.2.3"
+    tmp: "npm:^0.2.1"
+  checksum: 10c0/c838509c87567c7fc9956b5b97160aaf0d24c3afc32520cdd7c0f56e6f5a0437c717799574927a09639bcb19707a5581f589ea0c60cc2499fb4c28d8f4ee0f94
+  languageName: node
+  linkType: hard
+
 "@sinclair/typebox@npm:^0.34.0":
   version: 0.34.41
   resolution: "@sinclair/typebox@npm:0.34.41"
@@ -1208,6 +1218,13 @@ __metadata:
   version: 1.0.0
   resolution: "async-generator-function@npm:1.0.0"
   checksum: 10c0/2c50ef856c543ad500d8d8777d347e3c1ba623b93e99c9263ecc5f965c1b12d2a140e2ab6e43c3d0b85366110696f28114649411cbcd10b452a92a2318394186
+  languageName: node
+  linkType: hard
+
+"async@npm:^3.2.3":
+  version: 3.2.6
+  resolution: "async@npm:3.2.6"
+  checksum: 10c0/36484bb15ceddf07078688d95e27076379cc2f87b10c03b6dd8a83e89475a3c8df5848859dd06a4c95af1e4c16fc973de0171a77f18ea00be899aca2a4f85e70
   languageName: node
   linkType: hard
 
@@ -1603,6 +1620,7 @@ __metadata:
   resolution: "confluence_to_google_drive_migration@workspace:."
   dependencies:
     "@googleapis/docs": "npm:~8.1.1"
+    "@shelf/libreoffice-convert": "npm:libreoffice-convert@^1.7.0"
     "@types/jest": "npm:~30.0.0"
     "@types/node": "npm:~24.10.1"
     axios: "npm:~1.13.2"
@@ -1613,6 +1631,7 @@ __metadata:
     jest: "npm:~30.2.0"
     jest-util: "npm:~30.2.0"
     node-html-parser: "npm:~7.0.1"
+    p-limit: "npm:^7.2.0"
     ts-jest: "npm:~29.4.5"
     typescript: "npm:~5.9.3"
   bin:
@@ -3538,6 +3557,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"p-limit@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "p-limit@npm:7.2.0"
+  dependencies:
+    yocto-queue: "npm:^1.2.1"
+  checksum: 10c0/18e5ea305c31fdc0cf5260da7b63adfd46748cd72d4b40a31a13bd23eeece729c9308047fb5d848d7fa006d1b2fc2f36bb0d9dd173a300c38cd6dc1ed3355382
+  languageName: node
+  linkType: hard
+
 "p-locate@npm:^4.1.0":
   version: 4.1.0
   resolution: "p-locate@npm:4.1.0"
@@ -4083,6 +4111,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tmp@npm:^0.2.1":
+  version: 0.2.5
+  resolution: "tmp@npm:0.2.5"
+  checksum: 10c0/cee5bb7d674bb4ba3ab3f3841c2ca7e46daeb2109eec395c1ec7329a91d52fcb21032b79ac25161a37b2565c4858fefab927af9735926a113ef7bac9091a6e0e
+  languageName: node
+  linkType: hard
+
 "tmpl@npm:1.0.5":
   version: 1.0.5
   resolution: "tmpl@npm:1.0.5"
@@ -4458,5 +4493,12 @@ __metadata:
   version: 0.1.0
   resolution: "yocto-queue@npm:0.1.0"
   checksum: 10c0/dceb44c28578b31641e13695d200d34ec4ab3966a5729814d5445b194933c096b7ced71494ce53a0e8820685d1d010df8b2422e5bf2cdea7e469d97ffbea306f
+  languageName: node
+  linkType: hard
+
+"yocto-queue@npm:^1.2.1":
+  version: 1.2.2
+  resolution: "yocto-queue@npm:1.2.2"
+  checksum: 10c0/36d4793e9cf7060f9da543baf67c55e354f4862c8d3d34de1a1b1d7c382d44171315cc54abf84d8900b8113d742b830108a1434f4898fb244f9b7e8426d4b8f5
   languageName: node
   linkType: hard
