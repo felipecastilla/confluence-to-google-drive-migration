@@ -2,6 +2,7 @@ import {promises as fs} from 'fs';
 import os from 'os';
 import path from 'path';
 import libreOfficeConvert from '@shelf/libreoffice-convert';
+import {promisify} from 'util';
 
 type ConvertWithOptions = (
     document: Buffer,
@@ -10,8 +11,24 @@ type ConvertWithOptions = (
     options?: {fileName?: string},
 ) => Promise<Buffer>;
 
-const convertWithOptions = (libreOfficeConvert as unknown as {convertWithOptions: ConvertWithOptions})
-    .convertWithOptions;
+const convertWithOptions = promisify(
+    (
+        document: Buffer,
+        format: string,
+        filter: string | null | undefined,
+        options: {fileName?: string} | undefined,
+        callback: (error: Error | null, result: Buffer) => void,
+    ) =>
+        (libreOfficeConvert as unknown as {
+            convertWithOptions: (
+                document: Buffer,
+                format: string,
+                filter: string | null | undefined,
+                options: {fileName?: string} | undefined,
+                callback: (error: Error | null, result: Buffer) => void,
+            ) => void;
+        }).convertWithOptions(document, format, filter, options, callback),
+) as unknown as ConvertWithOptions;
 
 export interface DocumentConverter {
     convertMhtmlToDocx(document: Buffer): Promise<Buffer>;
