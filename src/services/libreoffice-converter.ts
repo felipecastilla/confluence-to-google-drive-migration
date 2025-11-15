@@ -42,8 +42,8 @@ export class LibreOfficeConverter implements DocumentConverter {
         try {
             await fs.writeFile(sourcePath, document);
             const sourceBuffer = await fs.readFile(sourcePath);
-            const tempBaseName = path.parse(sourcePath).name;
-            return await convertWithOptions(sourceBuffer, 'docx', undefined, {fileName: tempBaseName});
+            const tempFileName = path.basename(sourcePath);
+            return await convertWithOptions(sourceBuffer, 'docx', undefined, {fileName: tempFileName});
         } finally {
             await fs.rm(tempDir, {recursive: true, force: true});
         }

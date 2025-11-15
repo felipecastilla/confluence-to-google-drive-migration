@@ -37,6 +37,6 @@ describe('LibreOfficeConverter', () => {
         expect(bufferArg.equals(document)).toBe(true);
         expect(formatArg).toBe('docx');
         expect(filterArg).toBeUndefined();
-        expect(optionsArg).toEqual({fileName: 'source'});
+        expect(optionsArg).toEqual({fileName: 'source.mhtml'});
     });
 });
