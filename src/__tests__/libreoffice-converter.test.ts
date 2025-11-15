@@ -18,7 +18,15 @@ describe('LibreOfficeConverter', () => {
         const document = Buffer.from('content');
         const converted = Buffer.from('converted');
 
-        convertWithOptionsMock.mockResolvedValue(converted);
+        convertWithOptionsMock.mockImplementation(
+            (
+                buffer: Buffer,
+                format: string,
+                filter: string | null | undefined,
+                options: {fileName?: string} | undefined,
+                callback: (error: Error | null, result: Buffer) => void,
+            ) => callback(null, converted),
+        );
 
         const result = await converter.convertMhtmlToDocx(document);
 
@@ -29,6 +37,6 @@ describe('LibreOfficeConverter', () => {
         expect(bufferArg.equals(document)).toBe(true);
         expect(formatArg).toBe('docx');
         expect(filterArg).toBeUndefined();
-        expect(optionsArg).toEqual({fileName: 'source'});
+        expect(optionsArg).toEqual({fileName: 'source.mhtml'});
     });
 });
