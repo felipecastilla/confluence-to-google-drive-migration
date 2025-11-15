@@ -30,3 +30,21 @@ export const OUTPUT_PATH = process.env.ATLASSIAN_OUTPUT_PATH
 export const GOOGLE_APPLICATION_CREDENTIALS = process.env.GOOGLE_APPLICATION_CREDENTIALS || '';
 export const GOOGLE_AUTH_SCOPES = process.env.GOOGLE_AUTH_SCOPES || 'https://www.googleapis.com/auth/drive.file';
 export const GOOGLE_DRIVE_PARENT_FOLDER_ID = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID || '';
+
+function parseOptionalPositiveInteger(value: string | undefined, name: string): number | undefined {
+    if (!value) {
+        return undefined;
+    }
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 1) {
+        throw new Error(`Invalid value for ${name}: ${value}`);
+    }
+
+    return Math.floor(parsed);
+}
+
+export const LIBREOFFICE_CONVERSION_CONCURRENCY = parseOptionalPositiveInteger(
+    process.env.LIBREOFFICE_CONVERSION_CONCURRENCY,
+    'LIBREOFFICE_CONVERSION_CONCURRENCY',
+);

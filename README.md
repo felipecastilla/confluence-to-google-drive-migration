@@ -8,6 +8,18 @@ Because Google Drive supports viewing and editing `.docx` files, we export the C
 
 - [Node.js](https://nodejs.org/) 24 or later
 - [Yarn](https://yarnpkg.com/) (this project uses the Yarn 4 node-modules linker)
+- [LibreOffice](https://www.libreoffice.org/download/download-libreoffice/) (the CLI binary `soffice` must be available)
+
+The document conversion step relies on [`@shelf/libreoffice-convert`](https://www.npmjs.com/package/@shelf/libreoffice-convert),
+which shells out to the LibreOffice command-line tools. Install LibreOffice using your platform's package manager:
+
+- **macOS**: `brew install --cask libreoffice`
+- **Debian/Ubuntu**: `sudo apt-get update && sudo apt-get install libreoffice`
+- **Windows**: download the installer from the LibreOffice website and ensure `soffice.exe` is on the `PATH` (or set the
+  `LIBRE_OFFICE_EXE` environment variable).
+
+If LibreOffice is installed in a non-standard location, set `LIBRE_OFFICE_EXE` to the absolute path of the binary so the
+converter can locate it.
 
 Install the dependencies once:
 
@@ -74,7 +86,7 @@ yarn ctogdm list
 # download every page as a .doc file using the Confluence export API
 yarn ctogdm download
 
-# render the downloaded documents into the structured output directory
+# render the downloaded documents and convert them into .docx files
 yarn ctogdm render
 
 # copy attachments from the Confluence export bundle into the output directory
@@ -91,6 +103,8 @@ The CLI reads the environment variables documented above at runtime. The default
 - `ATLASSIAN_EXPORT_PATH` — folder containing the HTML export bundle (defaults to `confluence-export`).
 - `ATLASSIAN_DOWNLOAD_PATH` — target directory for downloaded `.doc` files (defaults to `downloaded-pages`).
 - `ATLASSIAN_OUTPUT_PATH` — final structured output directory (defaults to `output`).
+- `LIBREOFFICE_CONVERSION_CONCURRENCY` — optional maximum number of parallel LibreOffice conversions. Defaults to the number of
+  CPU cores detected by Node.js, but the value will never exceed that CPU count.
 
 ## Programmatic usage
 
@@ -126,7 +140,7 @@ your own clients, exporters, and `FileWriter`.
 2. Configure your `.env` file as described above.
 3. Export your Confluence space to Word and copy the bundle to the folder specified by `ATLASSIAN_EXPORT_PATH`.
 4. Run the CLI commands (or call the pipeline programmatically) to list, download, and render the pages.
-5. Convert the rendered documents to `.docx` if desired (for example, using [this batch conversion method](https://www.extendoffice.com/documents/word/5601-word-batch-convert-doc-to-docx.html)).
+5. Run the pipeline to download pages and convert them to `.docx` automatically.
 6. Upload the final files to Google Drive using the SDK authenticated via your service account credentials.
 
 ## Limitations

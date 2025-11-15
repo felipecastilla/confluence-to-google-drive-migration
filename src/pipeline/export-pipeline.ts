@@ -2,9 +2,18 @@ import path from 'path';
 import {ConfluenceClient, ConfluencePage, PageExporter} from '../types/confluence';
 import {FileWriter} from '../services/file-writer';
 import {getPageFileBaseName} from '../utils/page';
-import {ATLASSIAN_API_TOKEN, ATLASSIAN_BASE_URL, ATLASSIAN_EMAIL, ATLASSIAN_EXPORT_PATH, DOWNLOAD_PATH, OUTPUT_PATH} from '../config/env';
+import {
+    ATLASSIAN_API_TOKEN,
+    ATLASSIAN_BASE_URL,
+    ATLASSIAN_EMAIL,
+    ATLASSIAN_EXPORT_PATH,
+    DOWNLOAD_PATH,
+    LIBREOFFICE_CONVERSION_CONCURRENCY,
+    OUTPUT_PATH,
+} from '../config/env';
 import {HtmlExportConfluenceClient} from '../clients/confluence-client';
 import {DocxPageExporter} from '../services/page-exporter';
+import {LibreOfficeConverter} from '../services/libreoffice-converter';
 
 export interface ExportPipelineOptions {
     downloadDir: string;
@@ -12,6 +21,8 @@ export interface ExportPipelineOptions {
     attachmentsSourceDir?: string | null;
     attachmentsOutputDir?: string;
     documentExtension?: string;
+    outputExtension?: string;
+    conversionConcurrency?: number;
 }
 
 export class ExportPipeline {
@@ -78,10 +89,13 @@ export function createExportPipeline(): ExportPipeline {
         apiToken: ATLASSIAN_API_TOKEN,
     });
 
-    const exporter = new DocxPageExporter(fileWriter, {
+    const converter = new LibreOfficeConverter();
+    const exporter = new DocxPageExporter(fileWriter, converter, {
         downloadDir: DOWNLOAD_PATH,
         outputDir: OUTPUT_PATH,
         documentExtension: 'doc',
+        outputExtension: 'docx',
+        conversionConcurrency: LIBREOFFICE_CONVERSION_CONCURRENCY,
     });
 
     return new ExportPipeline(client, exporter, fileWriter, {
@@ -90,5 +104,7 @@ export function createExportPipeline(): ExportPipeline {
         attachmentsSourceDir: client.getAttachmentsDirectory(),
         attachmentsOutputDir: path.join(OUTPUT_PATH, 'attachments'),
         documentExtension: 'doc',
+        outputExtension: 'docx',
+        conversionConcurrency: LIBREOFFICE_CONVERSION_CONCURRENCY,
     });
 }
