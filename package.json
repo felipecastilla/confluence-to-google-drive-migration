@@ -1,4 +1,7 @@
 {
+  "author": "I2B Technologies",
+  "private": true,
+  "license": "UNLICENSED",
   "name": "confluence_to_google_drive_migration",
   "version": "1.0.0",
   "bin": {
