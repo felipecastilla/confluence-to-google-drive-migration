@@ -45,7 +45,7 @@ describe('DocxPageExporter', () => {
         await fs.writeFile(path.join(downloadDir, 'Page_111.doc'), 'root');
         await fs.writeFile(path.join(downloadDir, 'Child_222.doc'), 'child');
 
-        await exporter.renderPages(pages);
+        await expect(exporter.renderPages(pages)).resolves.toBeUndefined();
 
         expect(converter.convertMhtmlToDocx).toHaveBeenCalledTimes(2);
         const rootFile = await fs.readFile(path.join(outputDir, '1. Root', '1. Root.docx'), 'utf8');
