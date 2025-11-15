@@ -3,15 +3,30 @@ import os from 'os';
 import path from 'path';
 import libreOfficeConvert from '@shelf/libreoffice-convert';
 
-type ConvertWithOptions = (
+const convertWithOptions = (
     document: Buffer,
     format: string,
     filter?: string | null,
     options?: {fileName?: string},
-) => Promise<Buffer>;
+): Promise<Buffer> =>
+    new Promise((resolve, reject) => {
+        (libreOfficeConvert as unknown as {
+            convertWithOptions: (
+                document: Buffer,
+                format: string,
+                filter: string | null | undefined,
+                options: {fileName?: string} | undefined,
+                callback: (error: Error | null, result: Buffer) => void,
+            ) => void;
+        }).convertWithOptions(document, format, filter ?? undefined, options, (error, result) => {
+            if (error) {
+                reject(error);
+                return;
+            }
 
-const convertWithOptions = (libreOfficeConvert as unknown as {convertWithOptions: ConvertWithOptions})
-    .convertWithOptions;
+            resolve(result);
+        });
+    });
 
 export interface DocumentConverter {
     convertMhtmlToDocx(document: Buffer): Promise<Buffer>;
