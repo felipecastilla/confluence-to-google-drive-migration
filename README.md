@@ -2,24 +2,17 @@
 
 Scripts to help you migrate your Confluence documents to Google Drive.
 
-Because Google Drive supports viewing and editing `.docx` files, we export the Confluence space to Word, clean up the hierarchy locally, and then upload the files to Google Drive.
+Because Google Drive supports viewing and editing `.docx` files, we convert the Confluence **HTML export** locally and then upload the files to Google Drive.
 
 ## Prerequisites
 
 - [Node.js](https://nodejs.org/) 24 or later
 - [Yarn](https://yarnpkg.com/) (this project uses the Yarn 4 node-modules linker)
-- [LibreOffice](https://www.libreoffice.org/download/download-libreoffice/) (the CLI binary `soffice` must be available)
+- [Pandoc](https://pandoc.org/) 3.0 or later (must be available on your `PATH`)
 
-The document conversion step relies on [`@shelf/libreoffice-convert`](https://www.npmjs.com/package/@shelf/libreoffice-convert),
-which shells out to the LibreOffice command-line tools. Install LibreOffice using your platform's package manager:
-
-- **macOS**: `brew install --cask libreoffice`
-- **Debian/Ubuntu**: `sudo apt-get update && sudo apt-get install libreoffice`
-- **Windows**: download the installer from the LibreOffice website and ensure `soffice.exe` is on the `PATH` (or set the
-  `LIBRE_OFFICE_EXE` environment variable).
-
-If LibreOffice is installed in a non-standard location, set `LIBRE_OFFICE_EXE` to the absolute path of the binary so the
-converter can locate it.
+The document conversion step shells out to the `pandoc` binary. Install it with your platform's package manager or grab the
+latest release from the [Pandoc installation guide](https://pandoc.org/installing.html). Ensure `pandoc` is discoverable on
+your `PATH` before running the CLI.
 
 Install the dependencies once:
 
@@ -43,12 +36,17 @@ cp .env.example .env
 
 ### Atlassian Cloud export bundle
 
-The migration script reads the HTML bundle exported from Confluence (no authenticated API calls are required).
+The migration script reads the static HTML bundle exported from Confluence (no authenticated API calls are required). Point `ATLASSIAN_EXPORT_PATH` (defaults to `confluence-export`) at the unzipped export folder containing **`index.html`**, all page HTML files referenced from that index, and the **`attachments/`** directory created by Confluence. The folder layout should look like:
 
-The script reads `ATLASSIAN_EXPORT_PATH` (defaults to `confluence-export`) to locate the Word export bundle you downloaded from Confluence:
+```
+confluence-export/
+├── index.html               # page tree used by the pipeline to discover pages
+├── <page>.html              # HTML for each page listed in index.html
+└── attachments/             # Confluence’s exported attachments
+    └── <page-id>/           # subfolders and filenames match the export bundle
+```
 
-1. Export your Confluence space as “Word” using the procedure described in the [Atlassian documentation](https://community.atlassian.com/t5/Confluence-questions/Migrating-Data-from-confluence-to-google-Drive/qaq-p/1297000).
-2. Place the resulting folder (containing `index.html` and attachments) inside this project directory under the name configured in `ATLASSIAN_EXPORT_PATH`.
+The `render` step reads the HTML files directly from `ATLASSIAN_EXPORT_PATH` (no download step exists). When attachments are present in the export, the `attachments` command copies the entire `attachments/` tree to `${ATLASSIAN_OUTPUT_PATH}/attachments`, preserving the directory structure from the export bundle.
 
 ### Google Drive credentials
 
@@ -76,24 +74,23 @@ yarn ctogdm --help
 # list all pages detected in the Confluence export index
 yarn ctogdm list
 
-# render the exported HTML documents and convert them into .docx files
+# render the exported HTML documents from ATLASSIAN_EXPORT_PATH into .docx files under ATLASSIAN_OUTPUT_PATH
 yarn ctogdm render
 
-# copy attachments from the Confluence export bundle into the output directory
+# copy attachments from the Confluence export bundle into ATLASSIAN_OUTPUT_PATH/attachments
 yarn ctogdm attachments
 
 # legacy alias for the attachments command
 yarn ctogdm sync
 ```
 
-> ℹ️  The `attachments` command only copies files from the export bundle.
+> ℹ️  The `render` command converts the existing HTML files in `ATLASSIAN_EXPORT_PATH`; it does not download or fetch additional content. The `attachments` command only copies files from the export bundle.
 
 The CLI reads the environment variables documented above at runtime. The default directories are:
 
 - `ATLASSIAN_EXPORT_PATH` — folder containing the HTML export bundle (defaults to `confluence-export`).
-- `ATLASSIAN_OUTPUT_PATH` — final structured output directory (defaults to `output`).
-- `LIBREOFFICE_CONVERSION_CONCURRENCY` — optional maximum number of parallel LibreOffice conversions. Defaults to the number of
-  CPU cores detected by Node.js, but the value will never exceed that CPU count.
+- `ATLASSIAN_OUTPUT_PATH` — final structured output directory (defaults to `output`). The exporter mirrors the page hierarchy
+  from `index.html` into nested folders using the numbered names generated from the export.
 
 ## Programmatic usage
 
@@ -125,10 +122,9 @@ your own clients, exporters, and `FileWriter`.
 
 1. Clone this repository and install dependencies.
 2. Configure your `.env` file as described above.
-3. Export your Confluence space to Word and copy the bundle to the folder specified by `ATLASSIAN_EXPORT_PATH`.
+3. Export your Confluence space as **HTML** and copy the bundle (including `index.html` and `attachments/`) to the folder specified by `ATLASSIAN_EXPORT_PATH`.
 4. Run the CLI commands (or call the pipeline programmatically) to list pages, render them to `.docx`, and copy attachments.
 5. Upload the final files to Google Drive using the SDK authenticated via your service account credentials.
-6. Upload the final files to Google Drive using the SDK authenticated via your service account credentials.
 
 ## Limitations
 
