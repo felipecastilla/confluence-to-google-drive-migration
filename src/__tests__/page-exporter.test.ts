@@ -3,9 +3,8 @@ import os from 'os';
 import path from 'path';
 import {HtmlToDocxPageExporter} from '../services/page-exporter';
 import {FileWriter} from '../services/file-writer';
-import {ConfluencePage} from '../types/confluence';
-import {DocumentConverter} from '../services/libreoffice-converter';
-import {PageReader} from '../types/confluence';
+import {ConfluencePage, PageReader} from '../types/confluence';
+import {HtmlToDocxConverter} from '../services/html-to-docx-converter';
 
 async function createTempDir(prefix: string): Promise<string> {
     return fs.mkdtemp(path.join(os.tmpdir(), prefix));
@@ -22,11 +21,13 @@ describe('HtmlToDocxPageExporter', () => {
                 if (!content) {
                     throw new Error('missing content');
                 }
-                return content;
+                return {buffer: content, workingDirectory: '/export', fileName: `${page.file}`};
             }),
         };
-        const converter: DocumentConverter = {
-            convertHtmlToDocx: jest.fn(async buffer => Buffer.from(`${buffer.toString()}-docx`)),
+        const converter: HtmlToDocxConverter = {
+            convertHtmlToDocx: jest.fn(async (_buffer, options) =>
+                Buffer.from(`${options?.inputFileName}-docx`),
+            ),
         };
         const exporter = new HtmlToDocxPageExporter(fileWriter, reader, converter, {
             outputDir,
@@ -58,8 +59,8 @@ describe('HtmlToDocxPageExporter', () => {
         const rootFile = await fs.readFile(path.join(outputDir, '1. Root', '1. Root.docx'), 'utf8');
         const childFile = await fs.readFile(path.join(outputDir, '1. Root', 'Child.docx'), 'utf8');
 
-        expect(rootFile).toEqual('root-docx');
-        expect(childFile).toEqual('child-docx');
+        expect(rootFile).toEqual('Page_111.html-docx');
+        expect(childFile).toEqual('Child_222.html-docx');
     });
 
     it('limits concurrent conversions according to configuration', async () => {
@@ -73,12 +74,16 @@ describe('HtmlToDocxPageExporter', () => {
         }));
 
         const reader: PageReader = {
-            readPage: jest.fn(async page => Buffer.from(`content-${page.id}`)),
+            readPage: jest.fn(async page => ({
+                buffer: Buffer.from(`content-${page.id}`),
+                workingDirectory: '/export',
+                fileName: page.file,
+            })),
         };
 
         let activeConversions = 0;
         let maxConcurrency = 0;
-        const converter: DocumentConverter = {
+        const converter: HtmlToDocxConverter = {
             convertHtmlToDocx: jest.fn(async buffer => {
                 activeConversions += 1;
                 maxConcurrency = Math.max(maxConcurrency, activeConversions);
