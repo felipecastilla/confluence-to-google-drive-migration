@@ -41,17 +41,8 @@ export function buildCli(): Command {
         );
 
     program
-        .command('download')
-        .description('Download Confluence pages using the export API')
-        .action(() =>
-            runWithPipeline(async pipeline => {
-                await pipeline.downloadPages();
-            }),
-        );
-
-    program
         .command('render')
-        .description('Render downloaded pages into the output directory')
+        .description('Render exported pages into the output directory')
         .action(() =>
             runWithPipeline(async pipeline => {
                 await pipeline.renderPages();

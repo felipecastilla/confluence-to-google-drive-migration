@@ -1,28 +1,16 @@
 import path from 'path';
-import {ConfluenceClient, ConfluencePage, PageExporter} from '../types/confluence';
+import {ConfluenceClient, ConfluencePage, PageExporter, PageReader} from '../types/confluence';
 import {FileWriter} from '../services/file-writer';
-import {getPageFileBaseName} from '../utils/page';
-import {
-    ATLASSIAN_API_TOKEN,
-    ATLASSIAN_BASE_URL,
-    ATLASSIAN_EMAIL,
-    ATLASSIAN_EXPORT_PATH,
-    DOWNLOAD_PATH,
-    LIBREOFFICE_CONVERSION_CONCURRENCY,
-    OUTPUT_PATH,
-} from '../config/env';
+import {ATLASSIAN_EXPORT_PATH, LIBREOFFICE_CONVERSION_CONCURRENCY, OUTPUT_PATH} from '../config/env';
 import {HtmlExportConfluenceClient} from '../clients/confluence-client';
-import {DocxPageExporter} from '../services/page-exporter';
+import {HtmlToDocxPageExporter} from '../services/page-exporter';
 import {LibreOfficeConverter} from '../services/libreoffice-converter';
+import {HtmlPageReader} from '../services/html-page-reader';
 
 export interface ExportPipelineOptions {
-    downloadDir: string;
     outputDir: string;
     attachmentsSourceDir?: string | null;
     attachmentsOutputDir?: string;
-    documentExtension?: string;
-    outputExtension?: string;
-    conversionConcurrency?: number;
 }
 
 export class ExportPipeline {
@@ -43,13 +31,6 @@ export class ExportPipeline {
         return this.cachedPages;
     }
 
-    async downloadPages(pages?: ConfluencePage[]): Promise<void> {
-        const documentExtension = this.options.documentExtension || 'doc';
-        const tree = pages || (await this.listPages());
-        await this.fileWriter.ensureDir(this.options.downloadDir);
-        await this.downloadRecursive(tree, documentExtension);
-    }
-
     async renderPages(pages?: ConfluencePage[]): Promise<void> {
         const tree = pages || (await this.listPages());
         await this.fileWriter.removeDir(this.options.outputDir);
@@ -65,46 +46,25 @@ export class ExportPipeline {
         await this.fileWriter.removeDir(destination);
         await this.fileWriter.copyDir(this.options.attachmentsSourceDir, destination);
     }
-
-    private async downloadRecursive(pages: ConfluencePage[], extension: string): Promise<void> {
-        for (const page of pages) {
-            const buffer = await this.client.downloadPage(page);
-            const targetFileName = `${getPageFileBaseName(page)}.${extension}`;
-            const targetFilePath = path.join(this.options.downloadDir, targetFileName);
-            await this.fileWriter.writeBuffer(targetFilePath, buffer);
-
-            if (page.children.length > 0) {
-                await this.downloadRecursive(page.children, extension);
-            }
-        }
-    }
 }
 
 export function createExportPipeline(): ExportPipeline {
     const fileWriter = new FileWriter();
     const client = new HtmlExportConfluenceClient({
         exportPath: ATLASSIAN_EXPORT_PATH,
-        baseUrl: ATLASSIAN_BASE_URL,
-        email: ATLASSIAN_EMAIL,
-        apiToken: ATLASSIAN_API_TOKEN,
     });
 
     const converter = new LibreOfficeConverter();
-    const exporter = new DocxPageExporter(fileWriter, converter, {
-        downloadDir: DOWNLOAD_PATH,
+    const pageReader: PageReader = new HtmlPageReader(ATLASSIAN_EXPORT_PATH);
+    const exporter = new HtmlToDocxPageExporter(fileWriter, pageReader, converter, {
         outputDir: OUTPUT_PATH,
-        documentExtension: 'doc',
         outputExtension: 'docx',
         conversionConcurrency: LIBREOFFICE_CONVERSION_CONCURRENCY,
     });
 
     return new ExportPipeline(client, exporter, fileWriter, {
-        downloadDir: DOWNLOAD_PATH,
         outputDir: OUTPUT_PATH,
         attachmentsSourceDir: client.getAttachmentsDirectory(),
         attachmentsOutputDir: path.join(OUTPUT_PATH, 'attachments'),
-        documentExtension: 'doc',
-        outputExtension: 'docx',
-        conversionConcurrency: LIBREOFFICE_CONVERSION_CONCURRENCY,
     });
 }

@@ -1,28 +1,35 @@
 import {promises as fs} from 'fs';
 import os from 'os';
 import path from 'path';
-import {DocxPageExporter} from '../services/page-exporter';
+import {HtmlToDocxPageExporter} from '../services/page-exporter';
 import {FileWriter} from '../services/file-writer';
 import {ConfluencePage} from '../types/confluence';
 import {DocumentConverter} from '../services/libreoffice-converter';
-import {getPageFileBaseName} from '../utils/page';
+import {PageReader} from '../types/confluence';
 
 async function createTempDir(prefix: string): Promise<string> {
     return fs.mkdtemp(path.join(os.tmpdir(), prefix));
 }
 
-describe('DocxPageExporter', () => {
-    it('converts downloaded pages into docx files preserving hierarchy', async () => {
-        const downloadDir = await createTempDir('downloads-');
+describe('HtmlToDocxPageExporter', () => {
+    it('converts exported HTML pages into docx files preserving hierarchy', async () => {
         const outputDir = await createTempDir('output-');
         const fileWriter = new FileWriter();
-        const converter: DocumentConverter = {
-            convertMhtmlToDocx: jest.fn(async buffer => Buffer.from(`${buffer.toString()}-docx`)),
+        const pagesToContent = new Map<string, Buffer>();
+        const reader: PageReader = {
+            readPage: jest.fn(async page => {
+                const content = pagesToContent.get(page.id);
+                if (!content) {
+                    throw new Error('missing content');
+                }
+                return content;
+            }),
         };
-        const exporter = new DocxPageExporter(fileWriter, converter, {
-            downloadDir,
+        const converter: DocumentConverter = {
+            convertHtmlToDocx: jest.fn(async buffer => Buffer.from(`${buffer.toString()}-docx`)),
+        };
+        const exporter = new HtmlToDocxPageExporter(fileWriter, reader, converter, {
             outputDir,
-            documentExtension: 'doc',
             outputExtension: 'docx',
         });
 
@@ -42,12 +49,12 @@ describe('DocxPageExporter', () => {
             },
         ];
 
-        await fs.writeFile(path.join(downloadDir, 'Page_111.doc'), 'root');
-        await fs.writeFile(path.join(downloadDir, 'Child_222.doc'), 'child');
+        pagesToContent.set('111', Buffer.from('root'));
+        pagesToContent.set('222', Buffer.from('child'));
 
         await expect(exporter.renderPages(pages)).resolves.toBeUndefined();
 
-        expect(converter.convertMhtmlToDocx).toHaveBeenCalledTimes(2);
+        expect(converter.convertHtmlToDocx).toHaveBeenCalledTimes(2);
         const rootFile = await fs.readFile(path.join(outputDir, '1. Root', '1. Root.docx'), 'utf8');
         const childFile = await fs.readFile(path.join(outputDir, '1. Root', 'Child.docx'), 'utf8');
 
@@ -56,7 +63,6 @@ describe('DocxPageExporter', () => {
     });
 
     it('limits concurrent conversions according to configuration', async () => {
-        const downloadDir = await createTempDir('downloads-');
         const outputDir = await createTempDir('output-');
         const fileWriter = new FileWriter();
         const pages: ConfluencePage[] = Array.from({length: 4}).map((_, index) => ({
@@ -66,19 +72,14 @@ describe('DocxPageExporter', () => {
             children: [],
         }));
 
-        await Promise.all(
-            pages.map(page =>
-                fs.writeFile(
-                    path.join(downloadDir, `${getPageFileBaseName(page)}.doc`),
-                    `content-${page.id}`,
-                ),
-            ),
-        );
+        const reader: PageReader = {
+            readPage: jest.fn(async page => Buffer.from(`content-${page.id}`)),
+        };
 
         let activeConversions = 0;
         let maxConcurrency = 0;
         const converter: DocumentConverter = {
-            convertMhtmlToDocx: jest.fn(async buffer => {
+            convertHtmlToDocx: jest.fn(async buffer => {
                 activeConversions += 1;
                 maxConcurrency = Math.max(maxConcurrency, activeConversions);
                 await new Promise(resolve => setTimeout(resolve, 10));
@@ -95,10 +96,8 @@ describe('DocxPageExporter', () => {
             })),
         );
 
-        const exporter = new DocxPageExporter(fileWriter, converter, {
-            downloadDir,
+        const exporter = new HtmlToDocxPageExporter(fileWriter, reader, converter, {
             outputDir,
-            documentExtension: 'doc',
             outputExtension: 'docx',
             conversionConcurrency: 2,
         });
@@ -108,6 +107,6 @@ describe('DocxPageExporter', () => {
         cpusSpy.mockRestore();
 
         expect(maxConcurrency).toBeLessThanOrEqual(2);
-        expect(converter.convertMhtmlToDocx).toHaveBeenCalledTimes(pages.length);
+        expect(converter.convertHtmlToDocx).toHaveBeenCalledTimes(pages.length);
     });
 });

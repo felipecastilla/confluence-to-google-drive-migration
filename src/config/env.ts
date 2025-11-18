@@ -11,9 +11,9 @@ function requireEnv(name: string): string {
     return value;
 }
 
-export const ATLASSIAN_BASE_URL = requireEnv('ATLASSIAN_BASE_URL');
-export const ATLASSIAN_EMAIL = requireEnv('ATLASSIAN_EMAIL');
-export const ATLASSIAN_API_TOKEN = requireEnv('ATLASSIAN_API_TOKEN');
+export const ATLASSIAN_BASE_URL = process.env.ATLASSIAN_BASE_URL || '';
+export const ATLASSIAN_EMAIL = process.env.ATLASSIAN_EMAIL || '';
+export const ATLASSIAN_API_TOKEN = process.env.ATLASSIAN_API_TOKEN || '';
 
 export const ATLASSIAN_EXPORT_PATH = process.env.ATLASSIAN_EXPORT_PATH
     ? path.resolve(process.cwd(), process.env.ATLASSIAN_EXPORT_PATH)
