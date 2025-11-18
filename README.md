@@ -41,18 +41,11 @@ The project loads credentials and runtime configuration from a `.env` file. Star
 cp .env.example .env
 ```
 
-### Atlassian Cloud credentials
+### Atlassian Cloud export bundle
 
-The migration script downloads each page via the Confluence **exportword** endpoint. Atlassian Cloud requires Basic authentication with an API token.
+The migration script reads the HTML bundle exported from Confluence (no authenticated API calls are required).
 
-1. Log in to [https://id.atlassian.com/manage/api-tokens](https://id.atlassian.com/manage/api-tokens) and create a new token.
-2. Note the email address associated with your Atlassian account.
-3. Update your `.env` file:
-   - `ATLASSIAN_BASE_URL` — your site URL (e.g. `https://your-domain.atlassian.net`).
-   - `ATLASSIAN_EMAIL` — the email address from step 2.
-   - `ATLASSIAN_API_TOKEN` — the API token created in step 1.
-
-The script also reads `ATLASSIAN_EXPORT_PATH` (defaults to `confluence-export`) to locate the Word export bundle you downloaded from Confluence:
+The script reads `ATLASSIAN_EXPORT_PATH` (defaults to `confluence-export`) to locate the Word export bundle you downloaded from Confluence:
 
 1. Export your Confluence space as “Word” using the procedure described in the [Atlassian documentation](https://community.atlassian.com/t5/Confluence-questions/Migrating-Data-from-confluence-to-google-Drive/qaq-p/1297000).
 2. Place the resulting folder (containing `index.html` and attachments) inside this project directory under the name configured in `ATLASSIAN_EXPORT_PATH`.
@@ -83,10 +76,7 @@ yarn ctogdm --help
 # list all pages detected in the Confluence export index
 yarn ctogdm list
 
-# download every page as a .doc file using the Confluence export API
-yarn ctogdm download
-
-# render the downloaded documents and convert them into .docx files
+# render the exported HTML documents and convert them into .docx files
 yarn ctogdm render
 
 # copy attachments from the Confluence export bundle into the output directory
@@ -96,12 +86,11 @@ yarn ctogdm attachments
 yarn ctogdm sync
 ```
 
-> ℹ️  The `attachments` command only copies files from the export bundle. If you need fresh page content, run `download` and `render` beforehand.
+> ℹ️  The `attachments` command only copies files from the export bundle.
 
 The CLI reads the environment variables documented above at runtime. The default directories are:
 
 - `ATLASSIAN_EXPORT_PATH` — folder containing the HTML export bundle (defaults to `confluence-export`).
-- `ATLASSIAN_DOWNLOAD_PATH` — target directory for downloaded `.doc` files (defaults to `downloaded-pages`).
 - `ATLASSIAN_OUTPUT_PATH` — final structured output directory (defaults to `output`).
 - `LIBREOFFICE_CONVERSION_CONCURRENCY` — optional maximum number of parallel LibreOffice conversions. Defaults to the number of
   CPU cores detected by Node.js, but the value will never exceed that CPU count.
@@ -119,8 +108,6 @@ async function main(): Promise<void> {
 
   const pages = await pipeline.listPages();
   console.log(`Found ${pages.length} top-level pages`);
-
-  await pipeline.downloadPages(pages);
   await pipeline.renderPages(pages);
   await pipeline.syncAttachments();
 }
@@ -139,8 +126,8 @@ your own clients, exporters, and `FileWriter`.
 1. Clone this repository and install dependencies.
 2. Configure your `.env` file as described above.
 3. Export your Confluence space to Word and copy the bundle to the folder specified by `ATLASSIAN_EXPORT_PATH`.
-4. Run the CLI commands (or call the pipeline programmatically) to list, download, and render the pages.
-5. Run the pipeline to download pages and convert them to `.docx` automatically.
+4. Run the CLI commands (or call the pipeline programmatically) to list pages, render them to `.docx`, and copy attachments.
+5. Upload the final files to Google Drive using the SDK authenticated via your service account credentials.
 6. Upload the final files to Google Drive using the SDK authenticated via your service account credentials.
 
 ## Limitations

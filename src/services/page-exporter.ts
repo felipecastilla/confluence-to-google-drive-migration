@@ -1,33 +1,29 @@
 import os from 'os';
 import path from 'path';
 import pLimit, {LimitFunction} from 'p-limit';
-import {ConfluencePage, PageExporter} from '../types/confluence';
+import {ConfluencePage, PageExporter, PageReader} from '../types/confluence';
 import {FileWriter} from './file-writer';
-import {getPageFileBaseName} from '../utils/page';
 import {DocumentConverter} from './libreoffice-converter';
 
 export interface PageExporterOptions {
-    downloadDir: string;
     outputDir: string;
-    documentExtension?: string;
     outputExtension?: string;
     conversionConcurrency?: number;
 }
 
-export class DocxPageExporter implements PageExporter {
-    private readonly sourceExtension: string;
+export class HtmlToDocxPageExporter implements PageExporter {
     private readonly outputExtension: string;
     private readonly conversionQueue: LimitFunction;
 
     constructor(
         private readonly fileWriter: FileWriter,
+        private readonly pageReader: PageReader,
         private readonly converter: DocumentConverter,
         private readonly options: PageExporterOptions,
     ) {
         const cpuCount = Math.max(os.cpus()?.length ?? 1, 1);
         const concurrency = this.options.conversionConcurrency ?? cpuCount;
         this.conversionQueue = pLimit(Math.max(1, Math.min(cpuCount, concurrency)));
-        this.sourceExtension = options.documentExtension || 'doc';
         this.outputExtension = options.outputExtension || 'docx';
     }
 
@@ -56,16 +52,9 @@ export class DocxPageExporter implements PageExporter {
     }
 
     private async writeSinglePage(page: ConfluencePage, destinationDir: string): Promise<void> {
-        const sourceFileName = `${getPageFileBaseName(page)}.${this.sourceExtension}`;
-        const sourcePath = path.join(this.options.downloadDir, sourceFileName);
         const destinationPath = path.join(destinationDir, `${page.name}.${this.outputExtension}`);
-
-        if (!(await this.fileWriter.pathExists(sourcePath))) {
-            throw new Error(`Missing downloaded page for ${page.name} at ${sourcePath}`);
-        }
-
-        const buffer = await this.fileWriter.readBuffer(sourcePath);
-        const converted = await this.converter.convertMhtmlToDocx(buffer);
+        const buffer = await this.pageReader.readPage(page);
+        const converted = await this.converter.convertHtmlToDocx(buffer);
         await this.fileWriter.writeBuffer(destinationPath, converted);
     }
 }

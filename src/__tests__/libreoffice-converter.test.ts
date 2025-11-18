@@ -50,7 +50,7 @@ describe('LibreOfficeConverter', () => {
         });
 
         const converter = new LibreOfficeConverter('test-');
-        const result = await converter.convertMhtmlToDocx(documentBuffer);
+        const result = await converter.convertHtmlToDocx(documentBuffer);
 
         expect(accessSpy).toHaveBeenCalledWith('/fake/path/soffice');
         expect(execFileMock).toHaveBeenCalledTimes(1);
@@ -69,7 +69,7 @@ describe('LibreOfficeConverter', () => {
 
         const converter = new LibreOfficeConverter('test-');
 
-        await expect(converter.convertMhtmlToDocx(documentBuffer)).rejects.toThrow('Could not find soffice binary');
+        await expect(converter.convertHtmlToDocx(documentBuffer)).rejects.toThrow('Could not find soffice binary');
         expect(execFileMock).not.toHaveBeenCalled();
     });
 });

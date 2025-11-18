@@ -5,7 +5,7 @@ import {execFile} from 'child_process';
 import {pathToFileURL} from 'url';
 
 export interface DocumentConverter {
-    convertMhtmlToDocx(document: Buffer): Promise<Buffer>;
+    convertHtmlToDocx(document: Buffer): Promise<Buffer>;
 }
 
 export class LibreOfficeConverter implements DocumentConverter {
@@ -13,7 +13,7 @@ export class LibreOfficeConverter implements DocumentConverter {
 
     constructor(private readonly tmpPrefix = 'ctogdm-') {}
 
-    async convertMhtmlToDocx(document: Buffer): Promise<Buffer> {
+    async convertHtmlToDocx(document: Buffer): Promise<Buffer> {
         const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), this.tmpPrefix));
         const profileDir = await fs.mkdtemp(path.join(os.tmpdir(), `${this.tmpPrefix}profile-`));
         const sourcePath = path.join(tempDir, 'source.mhtml');

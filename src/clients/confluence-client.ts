@@ -1,4 +1,3 @@
-import axios, {AxiosInstance} from 'axios';
 import path from 'path';
 import {HTMLElement, parse} from 'node-html-parser';
 import {ConfluenceClient, ConfluencePage} from '../types/confluence';
@@ -6,15 +5,12 @@ import {readFile} from '../utils/fs';
 
 export interface ConfluenceClientConfig {
     exportPath: string;
-    baseUrl: string;
-    email: string;
-    apiToken: string;
 }
 
 export class HtmlExportConfluenceClient implements ConfluenceClient {
     private readonly indexPath: string;
 
-    constructor(private readonly config: ConfluenceClientConfig, private readonly httpClient: AxiosInstance = axios.create()) {
+    constructor(private readonly config: ConfluenceClientConfig) {
         this.indexPath = path.join(this.config.exportPath, 'index.html');
     }
 
@@ -28,19 +24,6 @@ export class HtmlExportConfluenceClient implements ConfluenceClient {
 
         const tree = this.parseList(rootUlElement, 0);
         return tree.children;
-    }
-
-    async downloadPage(page: ConfluencePage): Promise<Buffer> {
-        const pageUrl = new URL(`/wiki/exportword?pageId=${page.id}`, this.config.baseUrl).toString();
-        const authorizationHeader = `Basic ${Buffer.from(`${this.config.email}:${this.config.apiToken}`).toString('base64')}`;
-        const response = await this.httpClient.get<ArrayBuffer>(pageUrl, {
-            headers: {
-                Authorization: authorizationHeader,
-            },
-            responseType: 'arraybuffer',
-        });
-
-        return Buffer.from(response.data);
     }
 
     getAttachmentsDirectory(): string | null {

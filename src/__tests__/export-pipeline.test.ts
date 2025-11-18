@@ -10,14 +10,10 @@ async function createTempDir(prefix: string): Promise<string> {
 }
 
 class StubClient implements ConfluenceClient {
-    constructor(private readonly pages: ConfluencePage[], private readonly documentContents: Buffer, private readonly attachmentsDir: string | null) {}
+    constructor(private readonly pages: ConfluencePage[], private readonly attachmentsDir: string | null) {}
 
     async getPageTree(): Promise<ConfluencePage[]> {
         return this.pages;
-    }
-
-    async downloadPage(): Promise<Buffer> {
-        return this.documentContents;
     }
 
     getAttachmentsDirectory(): string | null {
@@ -30,8 +26,7 @@ class StubExporter implements PageExporter {
 }
 
 describe('ExportPipeline', () => {
-    it('downloads pages, renders output, and syncs attachments', async () => {
-        const downloadDir = await createTempDir('pipeline-downloads-');
+    it('renders output and syncs attachments from the HTML export bundle', async () => {
         const outputDir = await createTempDir('pipeline-output-');
         const attachmentsSourceDir = path.join(await createTempDir('pipeline-attachments-'), 'attachments');
         await fs.mkdir(attachmentsSourceDir, {recursive: true});
@@ -40,20 +35,14 @@ describe('ExportPipeline', () => {
         const pages: ConfluencePage[] = [
             {name: 'Root', id: '1', file: 'Root_1.html', children: []},
         ];
-        const client = new StubClient(pages, Buffer.from('doc'), attachmentsSourceDir);
+        const client = new StubClient(pages, attachmentsSourceDir);
         const exporter = new StubExporter();
         const fileWriter = new FileWriter();
         const pipeline = new ExportPipeline(client, exporter, fileWriter, {
-            downloadDir,
             outputDir,
             attachmentsSourceDir,
             attachmentsOutputDir: path.join(outputDir, 'attachments'),
-            documentExtension: 'doc',
         });
-
-        await pipeline.downloadPages();
-        const downloadPath = path.join(downloadDir, 'Root_1.doc');
-        expect(await fs.readFile(downloadPath, 'utf8')).toEqual('doc');
 
         await pipeline.renderPages();
         expect(exporter.renderPages).toHaveBeenCalledWith(pages, outputDir);
@@ -70,15 +59,13 @@ describe('ExportPipeline', () => {
         await fs.mkdir(attachmentsSourceDir, {recursive: true});
         await fs.writeFile(path.join(attachmentsSourceDir, 'file.txt'), 'attachment');
 
-        const client = new StubClient([], Buffer.from('doc'), attachmentsSourceDir);
+        const client = new StubClient([], attachmentsSourceDir);
         const exporter = new StubExporter();
         const fileWriter = new FileWriter();
         const pipeline = new ExportPipeline(client, exporter, fileWriter, {
-            downloadDir,
             outputDir,
             attachmentsSourceDir,
             attachmentsOutputDir: path.join(outputDir, 'attachments'),
-            documentExtension: 'doc',
         });
 
         await pipeline.syncAttachments();
