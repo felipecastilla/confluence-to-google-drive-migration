@@ -1,10 +1,10 @@
 import path from 'path';
 import {ConfluenceClient, ConfluencePage, PageExporter, PageReader} from '../types/confluence';
 import {FileWriter} from '../services/file-writer';
-import {ATLASSIAN_EXPORT_PATH, LIBREOFFICE_CONVERSION_CONCURRENCY, OUTPUT_PATH} from '../config/env';
+import {ATLASSIAN_EXPORT_PATH, OUTPUT_PATH} from '../config/env';
 import {HtmlExportConfluenceClient} from '../clients/confluence-client';
 import {HtmlToDocxPageExporter} from '../services/page-exporter';
-import {LibreOfficeConverter} from '../services/libreoffice-converter';
+import {PandocConverter} from '../services/pandoc-converter';
 import {HtmlPageReader} from '../services/html-page-reader';
 
 export interface ExportPipelineOptions {
@@ -54,12 +54,11 @@ export function createExportPipeline(): ExportPipeline {
         exportPath: ATLASSIAN_EXPORT_PATH,
     });
 
-    const converter = new LibreOfficeConverter();
+    const converter = new PandocConverter();
     const pageReader: PageReader = new HtmlPageReader(ATLASSIAN_EXPORT_PATH);
     const exporter = new HtmlToDocxPageExporter(fileWriter, pageReader, converter, {
         outputDir: OUTPUT_PATH,
         outputExtension: 'docx',
-        conversionConcurrency: LIBREOFFICE_CONVERSION_CONCURRENCY,
     });
 
     return new ExportPipeline(client, exporter, fileWriter, {

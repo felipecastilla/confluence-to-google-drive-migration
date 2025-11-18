@@ -3,7 +3,7 @@ import path from 'path';
 import pLimit, {LimitFunction} from 'p-limit';
 import {ConfluencePage, PageExporter, PageReader} from '../types/confluence';
 import {FileWriter} from './file-writer';
-import {DocumentConverter} from './libreoffice-converter';
+import {HtmlToDocxConverter} from './html-to-docx-converter';
 
 export interface PageExporterOptions {
     outputDir: string;
@@ -18,7 +18,7 @@ export class HtmlToDocxPageExporter implements PageExporter {
     constructor(
         private readonly fileWriter: FileWriter,
         private readonly pageReader: PageReader,
-        private readonly converter: DocumentConverter,
+        private readonly converter: HtmlToDocxConverter,
         private readonly options: PageExporterOptions,
     ) {
         const cpuCount = Math.max(os.cpus()?.length ?? 1, 1);
@@ -53,8 +53,11 @@ export class HtmlToDocxPageExporter implements PageExporter {
 
     private async writeSinglePage(page: ConfluencePage, destinationDir: string): Promise<void> {
         const destinationPath = path.join(destinationDir, `${page.name}.${this.outputExtension}`);
-        const buffer = await this.pageReader.readPage(page);
-        const converted = await this.converter.convertHtmlToDocx(buffer);
+        const {buffer, workingDirectory, fileName} = await this.pageReader.readPage(page);
+        const converted = await this.converter.convertHtmlToDocx(buffer, {
+            workingDirectory,
+            inputFileName: fileName ?? page.file,
+        });
         await this.fileWriter.writeBuffer(destinationPath, converted);
     }
 }
