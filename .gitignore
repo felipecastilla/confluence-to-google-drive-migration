@@ -1,5 +1,6 @@
 output
 downloaded-pages
+confluence-export
 dist
 coverage
 .idea
