@@ -42,9 +42,38 @@ export class ExportPipeline {
             return;
         }
 
-        const destination = this.options.attachmentsOutputDir || path.join(this.options.outputDir, 'attachments');
+        const pages = await this.listPages();
+        const attachmentsFolderName = this.getAttachmentsFolderName();
+        await Promise.all(pages.map(page => this.syncPageAttachments(page, this.options.outputDir, attachmentsFolderName)));
+    }
+
+    private async syncPageAttachments(
+        page: ConfluencePage,
+        baseDir: string,
+        attachmentsFolderName: string,
+    ): Promise<void> {
+        const pageDir = page.children.length > 0 ? path.join(baseDir, page.name) : baseDir;
+        await this.copyAttachments(page, pageDir, attachmentsFolderName);
+        await Promise.all(page.children.map(child => this.syncPageAttachments(child, pageDir, attachmentsFolderName)));
+    }
+
+    private async copyAttachments(page: ConfluencePage, pageDir: string, attachmentsFolderName: string): Promise<void> {
+        const source = path.join(this.options.attachmentsSourceDir!, page.id);
+        if (!(await this.fileWriter.pathExists(source))) {
+            return;
+        }
+
+        const destination = path.join(pageDir, attachmentsFolderName, page.id);
         await this.fileWriter.removeDir(destination);
-        await this.fileWriter.copyDir(this.options.attachmentsSourceDir, destination);
+        await this.fileWriter.copyDir(source, destination);
+    }
+
+    private getAttachmentsFolderName(): string {
+        if (this.options.attachmentsOutputDir) {
+            return path.basename(this.options.attachmentsOutputDir);
+        }
+
+        return 'attachments';
     }
 }
 

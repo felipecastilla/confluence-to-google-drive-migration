@@ -26,14 +26,21 @@ class StubExporter implements PageExporter {
 }
 
 describe('ExportPipeline', () => {
-    it('renders output and syncs attachments from the HTML export bundle', async () => {
+    it('renders output and nests attachments next to each page using the page id', async () => {
         const outputDir = await createTempDir('pipeline-output-');
         const attachmentsSourceDir = path.join(await createTempDir('pipeline-attachments-'), 'attachments');
-        await fs.mkdir(attachmentsSourceDir, {recursive: true});
-        await fs.writeFile(path.join(attachmentsSourceDir, 'file.txt'), 'attachment');
+        await fs.mkdir(path.join(attachmentsSourceDir, '1'), {recursive: true});
+        await fs.mkdir(path.join(attachmentsSourceDir, '2'), {recursive: true});
+        await fs.writeFile(path.join(attachmentsSourceDir, '1', 'root.txt'), 'root-attachment');
+        await fs.writeFile(path.join(attachmentsSourceDir, '2', 'child.txt'), 'child-attachment');
 
         const pages: ConfluencePage[] = [
-            {name: 'Root', id: '1', file: 'Root_1.html', children: []},
+            {
+                name: 'Root',
+                id: '1',
+                file: 'Root_1.html',
+                children: [{name: 'Child', id: '2', file: 'Child_2.html', children: []}],
+            },
         ];
         const client = new StubClient(pages, attachmentsSourceDir);
         const exporter = new StubExporter();
@@ -48,18 +55,21 @@ describe('ExportPipeline', () => {
         expect(exporter.renderPages).toHaveBeenCalledWith(pages, outputDir);
 
         await pipeline.syncAttachments();
-        const attachmentPath = path.join(outputDir, 'attachments', 'file.txt');
-        expect(await fs.readFile(attachmentPath, 'utf8')).toEqual('attachment');
+        const rootAttachmentPath = path.join(outputDir, 'Root', 'attachments', '1', 'root.txt');
+        const childAttachmentPath = path.join(outputDir, 'Root', 'attachments', '2', 'child.txt');
+
+        expect(await fs.readFile(rootAttachmentPath, 'utf8')).toEqual('root-attachment');
+        expect(await fs.readFile(childAttachmentPath, 'utf8')).toEqual('child-attachment');
     });
 
-    it('syncs attachments without requiring prior download or render steps', async () => {
-        const downloadDir = await createTempDir('pipeline-downloads-');
+    it('syncs attachments without requiring prior render steps', async () => {
         const outputDir = await createTempDir('pipeline-output-');
         const attachmentsSourceDir = path.join(await createTempDir('pipeline-attachments-'), 'attachments');
-        await fs.mkdir(attachmentsSourceDir, {recursive: true});
-        await fs.writeFile(path.join(attachmentsSourceDir, 'file.txt'), 'attachment');
+        await fs.mkdir(path.join(attachmentsSourceDir, '1'), {recursive: true});
+        await fs.writeFile(path.join(attachmentsSourceDir, '1', 'file.txt'), 'attachment');
 
-        const client = new StubClient([], attachmentsSourceDir);
+        const pages: ConfluencePage[] = [{name: 'Root', id: '1', file: 'Root_1.html', children: []}];
+        const client = new StubClient(pages, attachmentsSourceDir);
         const exporter = new StubExporter();
         const fileWriter = new FileWriter();
         const pipeline = new ExportPipeline(client, exporter, fileWriter, {
@@ -70,7 +80,7 @@ describe('ExportPipeline', () => {
 
         await pipeline.syncAttachments();
 
-        const attachmentPath = path.join(outputDir, 'attachments', 'file.txt');
+        const attachmentPath = path.join(outputDir, 'attachments', '1', 'file.txt');
         expect(await fs.readFile(attachmentPath, 'utf8')).toEqual('attachment');
         expect(exporter.renderPages).not.toHaveBeenCalled();
     });
