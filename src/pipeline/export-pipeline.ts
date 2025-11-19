@@ -43,34 +43,37 @@ export class ExportPipeline {
         }
 
         const pages = await this.listPages();
-        const attachmentsFolderName = this.getAttachmentsFolderName();
-        await Promise.all(pages.map(page => this.syncPageAttachments(page, this.options.outputDir, attachmentsFolderName)));
+        const attachmentsRelativePath = this.getAttachmentsRelativePath();
+        await Promise.all(pages.map(page => this.syncPageAttachments(page, this.options.outputDir, attachmentsRelativePath)));
     }
 
     private async syncPageAttachments(
         page: ConfluencePage,
         baseDir: string,
-        attachmentsFolderName: string,
+        attachmentsRelativePath: string,
     ): Promise<void> {
         const pageDir = page.children.length > 0 ? path.join(baseDir, page.name) : baseDir;
-        await this.copyAttachments(page, pageDir, attachmentsFolderName);
-        await Promise.all(page.children.map(child => this.syncPageAttachments(child, pageDir, attachmentsFolderName)));
+        await this.copyAttachments(page, pageDir, attachmentsRelativePath);
+        await Promise.all(page.children.map(child => this.syncPageAttachments(child, pageDir, attachmentsRelativePath)));
     }
 
-    private async copyAttachments(page: ConfluencePage, pageDir: string, attachmentsFolderName: string): Promise<void> {
+    private async copyAttachments(page: ConfluencePage, pageDir: string, attachmentsRelativePath: string): Promise<void> {
         const source = path.join(this.options.attachmentsSourceDir!, page.id);
         if (!(await this.fileWriter.pathExists(source))) {
             return;
         }
 
-        const destination = path.join(pageDir, attachmentsFolderName, page.id);
+        const destination = path.join(pageDir, attachmentsRelativePath, page.id);
         await this.fileWriter.removeDir(destination);
         await this.fileWriter.copyDir(source, destination);
     }
 
-    private getAttachmentsFolderName(): string {
+    private getAttachmentsRelativePath(): string {
         if (this.options.attachmentsOutputDir) {
-            return path.basename(this.options.attachmentsOutputDir);
+            const relativePath = path.relative(this.options.outputDir, this.options.attachmentsOutputDir);
+            if (!relativePath.startsWith('..')) {
+                return relativePath || 'attachments';
+            }
         }
 
         return 'attachments';

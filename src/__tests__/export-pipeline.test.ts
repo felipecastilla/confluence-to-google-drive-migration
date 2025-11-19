@@ -84,4 +84,26 @@ describe('ExportPipeline', () => {
         expect(await fs.readFile(attachmentPath, 'utf8')).toEqual('attachment');
         expect(exporter.renderPages).not.toHaveBeenCalled();
     });
+
+    it('preserves the configured attachments path relative to the docx output location', async () => {
+        const outputDir = await createTempDir('pipeline-output-');
+        const attachmentsSourceDir = path.join(await createTempDir('pipeline-attachments-'), 'attachments');
+        await fs.mkdir(path.join(attachmentsSourceDir, '1'), {recursive: true});
+        await fs.writeFile(path.join(attachmentsSourceDir, '1', 'file.txt'), 'relative-attachment');
+
+        const pages: ConfluencePage[] = [{name: 'Root', id: '1', file: 'Root_1.html', children: []}];
+        const client = new StubClient(pages, attachmentsSourceDir);
+        const exporter = new StubExporter();
+        const fileWriter = new FileWriter();
+        const pipeline = new ExportPipeline(client, exporter, fileWriter, {
+            outputDir,
+            attachmentsSourceDir,
+            attachmentsOutputDir: path.join(outputDir, 'assets', 'attachments'),
+        });
+
+        await pipeline.syncAttachments();
+
+        const attachmentPath = path.join(outputDir, 'assets', 'attachments', '1', 'file.txt');
+        expect(await fs.readFile(attachmentPath, 'utf8')).toEqual('relative-attachment');
+    });
 });
